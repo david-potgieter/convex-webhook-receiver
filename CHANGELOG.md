@@ -1,5 +1,11 @@
 # convex-webhook-receiver
 
+## 1.0.1
+
+### Patch Changes
+
+- 130a50f: deploy and docs update
+
 ## 1.0.0
 
 ### Major Changes
