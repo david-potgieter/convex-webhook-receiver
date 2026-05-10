@@ -23,27 +23,19 @@
       "import": "./dist/convex.config.js",
       "types": "./dist/convex.config.d.ts"
     },
-    "./_generated/component": {
-      "import": "./_generated/component.js",
-      "types": "./_generated/component.d.ts"
-    },
+    "./_generated/component": "./src/component/_generated/component.ts",
     "./test": "./src/test.ts"
   },
   "scripts": {
-    "build:codegen": "bunx convex codegen --component-dir ./src/component && bun run build",
-    "build": "tsup",
+    "codegen": "bunx convex codegen --component-dir ./src/component",
+    "build": "bunx convex codegen --component-dir ./src/component && tsup",
     "test": "vitest run",
-    "dev": "chokidar 'src/**/*.ts' -i '**/*.test.ts' -c 'bun run build:codegen' --initial",
     "lint": "tsc --noEmit"
   },
   "peerDependencies": {
-    "convex": ">=1.17.0",
-    "@convex-dev/action-retrier": ">=0.3.0",
-    "@convex-dev/workpool": ">=0.4.0"
+    "convex": ">=1.17.0"
   },
   "devDependencies": {
-    "@convex-dev/action-retrier": "^0.3.0",
-    "@convex-dev/workpool": "^0.4.6",
     "@convex-webhook-receiver/verifiers": "workspace:*",
     "@edge-runtime/vm": "^4.0.3",
     "convex": "^1.38.0",

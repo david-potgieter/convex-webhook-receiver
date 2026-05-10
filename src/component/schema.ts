@@ -12,11 +12,12 @@ export default defineSchema({
       v.literal("processing"),
       v.literal("delivered"),
       v.literal("failed"),
-      v.literal("dead")
+      v.literal("dead"),
     ),
     handlerFunctionHandle: v.string(),
     receivedAt: v.number(),
     expiresAt: v.number(),
+    maxAttempts: v.number(),
     attemptCount: v.number(),
     lastError: v.optional(v.string()),
   })
