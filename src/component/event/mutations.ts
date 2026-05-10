@@ -129,6 +129,29 @@ export async function sweepExpiredHelper(
   return null
 }
 
+export async function resetForReplayHelper(
+  ctx: MutationCtx,
+  args: { eventId: string },
+): Promise<{ replayed: true } | { replayed: false; reason: string }> {
+  const id = args.eventId as Id<'webhookEvents'>
+  const event = await ctx.db.get(id)
+  if (!event) return { replayed: false, reason: 'not_found' }
+  if (event.status !== 'dead' && event.status !== 'delivered') {
+    return { replayed: false, reason: 'not_replayable' }
+  }
+
+  await ctx.db.patch(id, { status: 'pending', attemptCount: 0, lastError: undefined })
+
+  const dlqEntry = await ctx.db
+    .query('webhookDlq')
+    .withIndex('by_event_id', q => q.eq('eventId', id))
+    .first()
+  if (dlqEntry) await ctx.db.delete(dlqEntry._id)
+
+  await ctx.scheduler.runAfter(0, internal.event.actions.processEvent, { eventId: args.eventId })
+  return { replayed: true }
+}
+
 // ---------------------------------------------------------------------------
 // Registered functions
 // ---------------------------------------------------------------------------
@@ -172,4 +195,13 @@ export const sweepExpired = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => sweepExpiredHelper(ctx),
+})
+
+export const resetForReplay = internalMutation({
+  args: { eventId: v.string() },
+  returns: v.union(
+    v.object({ replayed: v.literal(true) }),
+    v.object({ replayed: v.literal(false), reason: v.string() }),
+  ),
+  handler: async (ctx, args) => resetForReplayHelper(ctx, args),
 })

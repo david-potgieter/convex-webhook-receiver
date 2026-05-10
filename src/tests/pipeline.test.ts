@@ -2,7 +2,7 @@
 import { convexTest } from 'convex-test'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import webhookTest from '../test'
-import { storeEventHelper, fetchAndLockHelper, recordResultHelper, sweepExpiredHelper } from '../component/event/mutations'
+import { storeEventHelper, fetchAndLockHelper, recordResultHelper, sweepExpiredHelper, resetForReplayHelper } from '../component/event/mutations'
 import { getEventHelper, listEventsHelper, listDlqHelper } from '../component/event/queries'
 
 beforeEach(() => { vi.useFakeTimers() })
@@ -322,6 +322,70 @@ describe('pipeline - receive', () => {
       const rows = await ctx.db.query('webhookEvents').collect()
       expect(rows).toHaveLength(1)
       expect(rows[0].provider).toBe('github')
+    })
+  })
+})
+
+describe('pipeline - replay', () => {
+  it('replays a dead event: resets to pending, clears DLQ entry', async () => {
+    const t = makeT()
+    await t.run(async (ctx) => {
+      const id = await ctx.db.insert('webhookEvents', {
+        provider: 'test', rawBody: '{}', headers: {},
+        status: 'dead', handlerFunctionHandle: 'test:action:handler',
+        receivedAt: Date.now(), expiresAt: Date.now() + 86400000,
+        maxAttempts: 3, attemptCount: 3, lastError: 'handler threw',
+      })
+      await ctx.db.insert('webhookDlq', { eventId: id, movedAt: Date.now() })
+      const result = await resetForReplayHelper(ctx, { eventId: id.toString() })
+      expect(result.replayed).toBe(true)
+      const updated = await ctx.db.get(id)
+      expect(updated?.status).toBe('pending')
+      expect(updated?.attemptCount).toBe(0)
+      expect(updated?.lastError).toBeUndefined()
+      const dlq = await ctx.db.query('webhookDlq').collect()
+      expect(dlq).toHaveLength(0)
+    })
+  })
+
+  it('replays a delivered event: resets to pending', async () => {
+    const t = makeT()
+    await t.run(async (ctx) => {
+      const id = await ctx.db.insert('webhookEvents', {
+        provider: 'test', rawBody: '{}', headers: {},
+        status: 'delivered', handlerFunctionHandle: 'test:action:handler',
+        receivedAt: Date.now(), expiresAt: Date.now() + 86400000,
+        maxAttempts: 3, attemptCount: 1,
+      })
+      const result = await resetForReplayHelper(ctx, { eventId: id.toString() })
+      expect(result.replayed).toBe(true)
+      const updated = await ctx.db.get(id)
+      expect(updated?.status).toBe('pending')
+      expect(updated?.attemptCount).toBe(0)
+    })
+  })
+
+  it('rejects replay of a pending event', async () => {
+    const t = makeT()
+    await t.run(async (ctx) => {
+      const id = await ctx.db.insert('webhookEvents', {
+        provider: 'test', rawBody: '{}', headers: {},
+        status: 'pending', handlerFunctionHandle: 'test:action:handler',
+        receivedAt: Date.now(), expiresAt: Date.now() + 86400000,
+        maxAttempts: 3, attemptCount: 0,
+      })
+      const result = await resetForReplayHelper(ctx, { eventId: id.toString() })
+      expect(result.replayed).toBe(false)
+      if (!result.replayed) expect(result.reason).toBe('not_replayable')
+    })
+  })
+
+  it('returns not_found for an unknown event ID', async () => {
+    const t = makeT()
+    await t.run(async (ctx) => {
+      const result = await resetForReplayHelper(ctx, { eventId: 'nonexistent_id' })
+      expect(result.replayed).toBe(false)
+      if (!result.replayed) expect(result.reason).toBe('not_found')
     })
   })
 })

@@ -71,9 +71,8 @@ export async function processEventHelper(
 export async function replayHelper(
   ctx: ActionCtx,
   args: { eventId: string },
-): Promise<null> {
-  console.log('replay', args)
-  return null
+): Promise<{ replayed: true } | { replayed: false; reason: string }> {
+  return ctx.runMutation(internal.event.mutations.resetForReplay, args)
 }
 
 // ---------------------------------------------------------------------------
@@ -105,6 +104,9 @@ export const processEvent = internalAction({
 
 export const replay = action({
   args: { eventId: v.string() },
-  returns: v.null(),
+  returns: v.union(
+    v.object({ replayed: v.literal(true) }),
+    v.object({ replayed: v.literal(false), reason: v.string() }),
+  ),
   handler: async (ctx, args) => replayHelper(ctx, args),
 })
