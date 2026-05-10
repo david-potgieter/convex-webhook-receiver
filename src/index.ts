@@ -16,6 +16,11 @@ export type ReceiveResult =
 type BuiltInProvider = 'github' | 'stripe' | 'slack' | 'twilio' | 'shopify' | 'linear' | 'discord' | 'generic'
 type ProviderName = BuiltInProvider
 
+// Headers that carry a guaranteed unique delivery ID per provider.
+const DEDUP_HEADERS: Partial<Record<BuiltInProvider, string>> = {
+  github: 'x-github-delivery',
+}
+
 export class WebhookReceiver {
   constructor(
     public component: ComponentApi,
@@ -32,6 +37,7 @@ export class WebhookReceiver {
     maxAttempts?: number
     ttlDays?: number
     verifier?: Verifier
+    dedupKeyHeader?: string
   }) {
     const component = this.component
     const maxAttempts = config.maxAttempts ?? this.options.maxAttempts ?? 3
@@ -59,6 +65,9 @@ export class WebhookReceiver {
       const headers: Record<string, string> = {}
       request.headers.forEach((value: string, key: string) => { headers[key] = value })
 
+      const dedupHeader = config.dedupKeyHeader ?? DEDUP_HEADERS[config.provider]
+      const dedupKey = dedupHeader ? (request.headers.get(dedupHeader) ?? undefined) : undefined
+
       const result = await ctx.runAction(
         component.event.actions.receive,
         {
@@ -68,6 +77,7 @@ export class WebhookReceiver {
           handlerFunctionHandle: config.handlerFunctionHandle,
           maxAttempts,
           expiresInMs,
+          ...(dedupKey ? { dedupKey } : {}),
         },
       )
 
