@@ -1,6 +1,7 @@
 {
   "name": "convex-webhook-receiver",
   "version": "0.0.1",
+  "license": "Apache-2.0",
   "description": "Convex component for inbound webhook ingestion with signature verification, deduplication, and retry",
   "repository": {
     "type": "git",

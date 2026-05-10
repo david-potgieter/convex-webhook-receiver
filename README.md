@@ -1,4 +1,19 @@
+<div align="center">
+
 # convex-webhook-receiver
+
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)
+
+<strong>Reliable inbound webhook ingestion for Convex</strong>
+
+Signature verification • Deduplication • Async processing • Retry • Dead-letter queue
+
+[Documentation](#setup) • [Supported Providers](#supported-providers) • [API Reference](#api-reference) • [Example](#example)
+
+</div>
+
+---
 
 A [Convex component](https://www.convex.dev/components) for reliable inbound webhook ingestion. Verifies signatures, deduplicates deliveries, queues events for async processing, retries failures with exponential backoff, and parks exhausted events in a dead-letter queue.
 
@@ -84,6 +99,8 @@ export default http
 
 ## Supported providers
 
+Any webhook source works — use `generic` for HMAC-SHA256 with a custom header, or pass your own `verifier` function for any other scheme. The built-in providers are convenience wrappers with the correct algorithm and header pre-configured.
+
 | Provider  | Verification method              | Auto dedup header     |
 |-----------|----------------------------------|-----------------------|
 | `github`  | HMAC-SHA256 (`X-Hub-Signature-256`) | `X-GitHub-Delivery` |
@@ -123,7 +140,7 @@ webhookReceiver.httpHandler({
   provider: 'stripe',
   verifierSecret: process.env.STRIPE_WEBHOOK_SECRET!,
   handler: internal.webhooks.handleStripeEvent,
-  dedupKeyHeader: 'stripe-event-id', // if Stripe ever adds one
+  dedupKeyHeader: 'stripe-event-id',
 })
 ```
 
@@ -169,7 +186,7 @@ export const replayEvent = action({
 })
 ```
 
-## Querying the event log
+## API Reference
 
 ```ts
 import { query } from './_generated/server'
@@ -185,6 +202,10 @@ export const getEvent = query({
   handler: async (ctx, { eventId }) => webhookReceiver.getEvent(ctx, eventId),
 })
 ```
+
+## Example
+
+A working example app with GitHub, Stripe, and Slack endpoints is in [`apps/example`](https://github.com/david-potgieter/convex-webhook-receiver-mono/tree/main/apps/example).
 
 ## Testing
 
@@ -204,3 +225,13 @@ function makeT() {
   return t
 }
 ```
+
+## License
+
+Apache-2.0
+
+---
+
+<div align="center">
+Built with ♥ for Convex | <a href="https://www.convex.dev/">Convex</a> • <a href="https://docs.convex.dev/components">Components</a> • <a href="https://github.com/david-potgieter/convex-webhook-receiver-mono">GitHub</a>
+</div>
