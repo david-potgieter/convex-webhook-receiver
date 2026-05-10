@@ -1,7 +1,15 @@
-import { convexTest } from "convex-test";
-import schema from "../convex/schema";
+/// <reference types="vite/client" />
+import type { TestConvex } from "convex-test";
+import type { GenericSchema, SchemaDefinition } from "convex/server";
+import schema from "./component/schema.js";
 
-export function initConvexTest() {
-  const modules = import.meta.glob("../convex/**/*.ts");
-  return convexTest(schema, modules);
+const modules = import.meta.glob("./component/**/*.ts");
+
+export function register(
+  t: TestConvex<SchemaDefinition<GenericSchema, boolean>>,
+  name: string = "webhookReceiver",
+) {
+  t.registerComponent(name, schema, modules);
 }
+
+export default { register, schema, modules };

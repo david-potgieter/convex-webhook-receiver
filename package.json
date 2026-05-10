@@ -20,22 +20,20 @@
       "types": "./dist/index.d.ts"
     },
     "./convex.config": {
-      "import": "./convex.config.js",
-      "types": "./convex.config.d.ts"
+      "import": "./dist/convex.config.js",
+      "types": "./dist/convex.config.d.ts"
     },
     "./_generated/component": {
       "import": "./_generated/component.js",
       "types": "./_generated/component.d.ts"
     },
-    "./test": {
-      "import": "./dist/test.js",
-      "types": "./dist/test.d.ts"
-    }
+    "./test": "./src/test.ts"
   },
   "scripts": {
+    "build:codegen": "bunx convex codegen --component-dir ./src/component && bun run build",
     "build": "tsup",
     "test": "vitest run",
-    "dev": "vitest",
+    "dev": "chokidar 'src/**/*.ts' -i '**/*.test.ts' -c 'bun run build:codegen' --initial",
     "lint": "tsc --noEmit"
   },
   "peerDependencies": {

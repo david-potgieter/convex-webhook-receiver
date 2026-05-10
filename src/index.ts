@@ -1,3 +1,3 @@
-throw new Error(
-  "convex-webhook-receiver is not yet released — track progress at https://github.com/david-potgieter/convex-webhook-receiver-mono"
-);
+export class WebhookReceiver {
+  // Implemented in KAR-320
+}

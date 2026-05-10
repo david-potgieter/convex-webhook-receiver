@@ -1,9 +1,13 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/test.ts"],
+  entry: {
+    index: "src/index.ts",
+    "convex.config": "src/component/convex.config.ts",
+  },
   format: ["esm"],
-  dts: { entry: "src/index.ts" },
+  dts: { entry: { index: "src/index.ts", "convex.config": "src/component/convex.config.ts" } },
   clean: true,
   noExternal: ["@convex-webhook-receiver/verifiers"],
+  external: ["convex-test"],
 });
