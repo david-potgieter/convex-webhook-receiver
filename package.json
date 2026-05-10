@@ -1,0 +1,48 @@
+{
+  "name": "convex-webhook-receiver",
+  "version": "0.0.1",
+  "description": "Convex component for inbound webhook ingestion with signature verification, deduplication, and retry",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./convex.config": {
+      "import": "./convex.config.js",
+      "types": "./convex.config.d.ts"
+    },
+    "./_generated/component": {
+      "import": "./_generated/component.js",
+      "types": "./_generated/component.d.ts"
+    },
+    "./test": {
+      "import": "./dist/test.js",
+      "types": "./dist/test.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "dev": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "convex": ">=1.17.0",
+    "@convex-dev/action-retrier": ">=0.3.0",
+    "@convex-dev/workpool": ">=0.4.0"
+  },
+  "devDependencies": {
+    "@convex-dev/action-retrier": "^0.3.0",
+    "@convex-dev/workpool": "^0.4.6",
+    "@convex-webhook-receiver/verifiers": "workspace:*",
+    "@edge-runtime/vm": "^4.0.3",
+    "convex": "^1.38.0",
+    "convex-test": "^0.0.33",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}
