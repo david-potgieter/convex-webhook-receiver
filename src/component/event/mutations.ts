@@ -24,16 +24,23 @@ export async function storeEventHelper(
     maxAttempts: number
     expiresInMs: number
   },
-): Promise<{ accepted: true; eventId: string } | { accepted: false; reason: string; eventId?: string }> {
+): Promise<
+  | { accepted: true; eventId: string }
+  | { accepted: false; reason: string; eventId?: string }
+> {
   const { dedupKey } = args
 
   if (dedupKey) {
     const existing = await ctx.db
       .query('webhookDedup')
-      .withIndex('by_dedup_key', q => q.eq('dedupKey', dedupKey))
+      .withIndex('by_dedup_key', (q) => q.eq('dedupKey', dedupKey))
       .first()
     if (existing) {
-      return { accepted: false as const, reason: 'duplicate', eventId: existing.eventId.toString() }
+      return {
+        accepted: false as const,
+        reason: 'duplicate',
+        eventId: existing.eventId.toString(),
+      }
     }
   }
 
@@ -57,7 +64,9 @@ export async function storeEventHelper(
     await ctx.db.insert('webhookDedup', { dedupKey, eventId, expiresAt })
   }
 
-  await ctx.scheduler.runAfter(0, internal.event.actions.processEvent, { eventId: eventId.toString() })
+  await ctx.scheduler.runAfter(0, internal.event.actions.processEvent, {
+    eventId: eventId.toString(),
+  })
 
   return { accepted: true as const, eventId: eventId.toString() }
 }
@@ -68,7 +77,8 @@ export async function fetchAndLockHelper(
 ): Promise<Doc<'webhookEvents'> | null> {
   const id = args.eventId as Id<'webhookEvents'>
   const event = await ctx.db.get(id)
-  if (!event || (event.status !== 'pending' && event.status !== 'failed')) return null
+  if (!event || (event.status !== 'pending' && event.status !== 'failed'))
+    return null
   await ctx.db.patch(id, { status: 'processing' })
   return event
 }
@@ -94,25 +104,36 @@ export async function recordResultHelper(
   }
 
   if (newCount >= args.maxAttempts) {
-    await ctx.db.patch(id, { status: 'dead', attemptCount: newCount, ...errorPatch })
+    await ctx.db.patch(id, {
+      status: 'dead',
+      attemptCount: newCount,
+      ...errorPatch,
+    })
     await ctx.db.insert('webhookDlq', { eventId: id, movedAt: Date.now() })
     return null
   }
 
-  await ctx.db.patch(id, { status: 'failed', attemptCount: newCount, ...errorPatch })
-  const backoffMs = Math.min(1000 * Math.pow(2, args.attemptCount), 30 * 60 * 1000)
-  await ctx.scheduler.runAfter(backoffMs, internal.event.actions.processEvent, { eventId: args.eventId })
+  await ctx.db.patch(id, {
+    status: 'failed',
+    attemptCount: newCount,
+    ...errorPatch,
+  })
+  const backoffMs = Math.min(
+    1000 * Math.pow(2, args.attemptCount),
+    30 * 60 * 1000,
+  )
+  await ctx.scheduler.runAfter(backoffMs, internal.event.actions.processEvent, {
+    eventId: args.eventId,
+  })
   return null
 }
 
-export async function sweepExpiredHelper(
-  ctx: MutationCtx,
-): Promise<null> {
+export async function sweepExpiredHelper(ctx: MutationCtx): Promise<null> {
   const now = Date.now()
 
   const expiredEvents = await ctx.db
     .query('webhookEvents')
-    .withIndex('by_expires_at', q => q.lt('expiresAt', now))
+    .withIndex('by_expires_at', (q) => q.lt('expiresAt', now))
     .collect()
   for (const event of expiredEvents) {
     await ctx.db.delete(event._id)
@@ -120,7 +141,7 @@ export async function sweepExpiredHelper(
 
   const expiredDedup = await ctx.db
     .query('webhookDedup')
-    .withIndex('by_expires_at', q => q.lt('expiresAt', now))
+    .withIndex('by_expires_at', (q) => q.lt('expiresAt', now))
     .collect()
   for (const dedup of expiredDedup) {
     await ctx.db.delete(dedup._id)
@@ -140,15 +161,21 @@ export async function resetForReplayHelper(
     return { replayed: false, reason: 'not_replayable' }
   }
 
-  await ctx.db.patch(id, { status: 'pending', attemptCount: 0, lastError: undefined })
+  await ctx.db.patch(id, {
+    status: 'pending',
+    attemptCount: 0,
+    lastError: undefined,
+  })
 
   const dlqEntry = await ctx.db
     .query('webhookDlq')
-    .withIndex('by_event_id', q => q.eq('eventId', id))
+    .withIndex('by_event_id', (q) => q.eq('eventId', id))
     .first()
   if (dlqEntry) await ctx.db.delete(dlqEntry._id)
 
-  await ctx.scheduler.runAfter(0, internal.event.actions.processEvent, { eventId: args.eventId })
+  await ctx.scheduler.runAfter(0, internal.event.actions.processEvent, {
+    eventId: args.eventId,
+  })
   return { replayed: true }
 }
 
@@ -168,7 +195,11 @@ export const storeEvent = internalMutation({
   },
   returns: v.union(
     v.object({ accepted: v.literal(true), eventId: v.string() }),
-    v.object({ accepted: v.literal(false), reason: v.string(), eventId: v.optional(v.string()) }),
+    v.object({
+      accepted: v.literal(false),
+      reason: v.string(),
+      eventId: v.optional(v.string()),
+    }),
   ),
   handler: async (ctx, args) => storeEventHelper(ctx, args),
 })

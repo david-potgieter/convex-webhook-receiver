@@ -39,6 +39,7 @@
   "devDependencies": {
     "@convex-webhook-receiver/verifiers": "workspace:*",
     "@edge-runtime/vm": "^4.0.3",
+    "@vitest/coverage-v8": "2.1.9",
     "convex": "^1.38.0",
     "convex-test": "^0.0.33",
     "tsup": "^8.3.0",

@@ -32,7 +32,7 @@ export async function getDlqEntryHelper(
   const id = args.eventId as Id<'webhookEvents'>
   return ctx.db
     .query('webhookDlq')
-    .withIndex('by_event_id', q => q.eq('eventId', id))
+    .withIndex('by_event_id', (q) => q.eq('eventId', id))
     .first()
 }
 
@@ -42,7 +42,7 @@ export async function listEventsHelper(
   const now = Date.now()
   return ctx.db
     .query('webhookEvents')
-    .withIndex('by_expires_at', q => q.gt('expiresAt', now))
+    .withIndex('by_expires_at', (q) => q.gt('expiresAt', now))
     .collect()
 }
 

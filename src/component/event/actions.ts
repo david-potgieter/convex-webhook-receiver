@@ -18,7 +18,10 @@ export async function receiveHelper(
     maxAttempts?: number
     expiresInMs?: number
   },
-): Promise<{ accepted: true; eventId: string } | { accepted: false; reason: string; eventId?: string }> {
+): Promise<
+  | { accepted: true; eventId: string }
+  | { accepted: false; reason: string; eventId?: string }
+> {
   return ctx.runMutation(internal.event.mutations.storeEvent, {
     provider: args.provider,
     rawBody: args.rawBody,
@@ -34,7 +37,10 @@ export async function processEventHelper(
   ctx: ActionCtx,
   args: { eventId: string },
 ): Promise<null> {
-  const event = await ctx.runMutation(internal.event.mutations.fetchAndLock, args)
+  const event = await ctx.runMutation(
+    internal.event.mutations.fetchAndLock,
+    args,
+  )
   if (!event) return null
 
   const handle = event.handlerFunctionHandle as FunctionHandle<
@@ -91,7 +97,11 @@ export const receive = action({
   },
   returns: v.union(
     v.object({ accepted: v.literal(true), eventId: v.string() }),
-    v.object({ accepted: v.literal(false), reason: v.string(), eventId: v.optional(v.string()) }),
+    v.object({
+      accepted: v.literal(false),
+      reason: v.string(),
+      eventId: v.optional(v.string()),
+    }),
   ),
   handler: async (ctx, args) => receiveHelper(ctx, args),
 })
