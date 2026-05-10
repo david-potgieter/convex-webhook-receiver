@@ -1,5 +1,6 @@
-import { httpActionGeneric } from 'convex/server'
+import { httpActionGeneric, createFunctionHandle } from 'convex/server'
 import type {
+  FunctionReference,
   GenericActionCtx,
   GenericDataModel,
   GenericQueryCtx,
@@ -7,7 +8,8 @@ import type {
 import type { ComponentApi } from './component/_generated/component.js'
 import { verifyGitHub, verifyStripe, verifySlack, verifyTwilio, verifyShopify, verifyLinear, verifyDiscord, verifyHmacGeneric, type Verifier } from '@convex-webhook-receiver/verifiers'
 
-export type WebhookHandlerFn = string
+export type WebhookHandlerArgs = { provider: string; rawBody: string; headers: Record<string, string> }
+export type WebhookHandlerRef = FunctionReference<'action', 'internal', WebhookHandlerArgs, any>
 
 export type ReceiveResult =
   | { accepted: true; eventId: string }
@@ -33,7 +35,7 @@ export class WebhookReceiver {
   httpHandler(config: {
     provider: ProviderName
     verifierSecret: string
-    handlerFunctionHandle: string
+    handler: WebhookHandlerRef
     maxAttempts?: number
     ttlDays?: number
     verifier?: Verifier
@@ -68,13 +70,15 @@ export class WebhookReceiver {
       const dedupHeader = config.dedupKeyHeader ?? DEDUP_HEADERS[config.provider]
       const dedupKey = dedupHeader ? (request.headers.get(dedupHeader) ?? undefined) : undefined
 
+      const handlerFunctionHandle = await createFunctionHandle(config.handler)
+
       const result = await ctx.runAction(
         component.event.actions.receive,
         {
           provider: config.provider,
           rawBody,
           headers,
-          handlerFunctionHandle: config.handlerFunctionHandle,
+          handlerFunctionHandle,
           maxAttempts,
           expiresInMs,
           ...(dedupKey ? { dedupKey } : {}),
