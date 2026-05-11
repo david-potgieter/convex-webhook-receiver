@@ -1,5 +1,11 @@
 # convex-webhook-receiver
 
+## 1.0.6
+
+### Patch Changes
+
+- 39a1e4a: Changed NPM repo links
+
 ## 1.0.5
 
 ### Patch Changes
