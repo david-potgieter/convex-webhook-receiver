@@ -1,0 +1,27 @@
+{
+  "name": "example",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bunx convex dev --typecheck-components",
+    "codegen": "bunx convex codegen",
+    "test": "vitest run --passWithNoTests",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^4.0.3",
+    "@types/bun": "latest",
+    "@types/node": "^25.6.2",
+    "convex-test": "^0.0.33",
+    "vitest": "^2.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@convex-webhook-receiver/verifiers": "workspace:*",
+    "convex": "^1.38.0",
+    "convex-webhook-receiver": "^1.0.6"
+  }
+}
