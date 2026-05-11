@@ -2,6 +2,7 @@
 
 # convex-webhook-receiver
 
+![npm](https://img.shields.io/npm/v/convex-webhook-receiver)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=flat&logo=typescript&logoColor=white)
 
