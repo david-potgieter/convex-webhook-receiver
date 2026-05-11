@@ -5,12 +5,11 @@
   "description": "Convex component for inbound webhook ingestion with signature verification, deduplication, and retry",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/david-potgieter/convex-webhook-receiver-mono.git",
-    "directory": "packages/convex-webhook-receiver"
+    "url": "git+https://github.com/david-potgieter/convex-webhook-receiver.git"
   },
-  "homepage": "https://github.com/david-potgieter/convex-webhook-receiver-mono#readme",
+  "homepage": "https://github.com/david-potgieter/convex-webhook-receiver#readme",
   "bugs": {
-    "url": "https://github.com/david-potgieter/convex-webhook-receiver-mono/issues"
+    "url": "https://github.com/david-potgieter/convex-webhook-receiver/issues"
   },
   "engines": {
     "node": ">=22.0.0"
