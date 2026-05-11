@@ -1,5 +1,11 @@
 # convex-webhook-receiver
 
+## 1.0.4
+
+### Patch Changes
+
+- 17c6a3d: Subtree flow
+
 ## 1.0.3
 
 ### Patch Changes
